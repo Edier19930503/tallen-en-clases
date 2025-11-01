@@ -41,11 +41,14 @@ int main() {
     double prom;
     min_max_prom(arreglo, n, &minv, &maxv, &prom);
 
-    std::cout << "min=" << minv << " max=" << maxv << " prom=" << std::fixed << std::setprecision(2) << prom << std::endl;
+    std::cout << "min=" << minv
+              << " max=" << maxv
+              << " prom=" << std::fixed << std::setprecision(2) << prom << '\n';
 
     delete[] arreglo;
     return 0;
 }
+
 
 Ejercicio 2: Rotación circular in-place — 12 pts Enunciado:
 Dado un arreglo de n enteros y un desplazamiento k, rota a la derecha k posiciones in-place. Usa una función auxiliar reverse y punteros.
@@ -57,50 +60,52 @@ Caso(s) de prueba sugeridos:
 
 
 
-#include <stdio.h>
+#include <iostream>
+using namespace std;
 
-// Se crea funcion  el segmento del arreglo desde índice i hasta j usando punteros
+// Función auxiliar: invierte el segmento a[i..j]
 void reverse(int *a, size_t i, size_t j) {
-    int *left = a + i;
-    int *right = a + j;
-    while (left < right) {
-        int temp = *left;
-        *left = *right;
-        *right = temp;
-        ++left;
-        --right;
+    while (i < j) {
+        int tmp = *(a + i);
+        *(a + i) = *(a + j);
+        *(a + j) = tmp;
+        i++;
+        j--;
     }
 }
 
-// Se crea funcion para rotar el arreglo a la derecha k posiciones usando tres reversos
+// Rota el arreglo a la derecha k posiciones
 void rotar_derecha(int *a, size_t n, size_t k) {
     if (n == 0) return;
-    k %= n;  // Asegura que k no sea mayor que n
- // Paso 1: invertir todo el arreglo
-    reverse(a, 0, n - 1);     
-// Paso 2: invertir los primeros k elementos
-    reverse(a, 0, k - 1);   
-// Paso 3: invertir el resto
-    reverse(a, k, n - 1);       
+    k = k % n; // evitar rotaciones mayores que n
+    if (k == 0) return;
+
+    reverse(a, 0, n - 1);
+    reverse(a, 0, k - 1);
+    reverse(a, k, n - 1);
+}
+
+// Imprimir arreglo
+void print_array(int *a, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        cout << *(a + i);
+        if (i < n - 1) cout << " ";
+    }
+    cout << endl;
 }
 
 int main() {
-    int a[] = {1, 2, 3, 4, 5};
-    size_t n = sizeof(a) / sizeof(a[0]);
-    size_t k = 2;
+    size_t n, k;
+    cin >> n >> k;
+    int *arr = new int[n];
+    for (size_t i = 0; i < n; ++i) cin >> arr[i];
 
-    rotar_derecha(a, n, k);
+    rotar_derecha(arr, n, k);
+    print_array(arr, n);
 
-    // Se muestra resultado
-    for (size_t i = 0; i < n; ++i) {
-        printf("%d ", a[i]);
-    }
-    printf("\n");
-
+    delete[] arr;
     return 0;
 }
-
-
 
 
 Ejercicio 3: Normalizar cadenas (arreglo de chars) — 12 pts Enunciado:
@@ -112,59 +117,59 @@ Ejemplo:
 Entrada: " hola mundo C " → Salida: "hola mundo C" (longitud 12)
 
 
-#include <stdio.h>
-#include <ctype.h>
+#include <iostream>
+#include <cstring>
+using namespace std;
 
-// Se vrea funcion para normalizar la cadena: elimina espacios duplicados y recorta extremos
-size_t normalizar_espacios(const char *src, char *dst, size_t outcap) {
-    const char *p = src;
-    char *q = dst;
-    size_t count = 0;
+size_t normalizar_espacios(const char *in, char *out, size_t outcap) {
+    const char *src = in;
+    char *dst = out;
+    char *dst_end = out + outcap - 1; // espacio para '\0'
 
-    // Se crea funcion para saltar espacios iniciales
-    while (*p && isspace((unsigned char)*p)) {
-        ++p;
+    // Saltar espacios iniciales
+    while (*src == ' ') {
+        ++src;
     }
 
-    int espacio_prev = 0;
+    bool espacio_anterior = false;
 
-    while (*p && count + 1 < outcap) {
-        if (isspace((unsigned char)*p)) {
-            if (!espacio_prev) {
-                *q++ = ' ';
-                ++count;
-                espacio_prev = 1;
-            }
+    while (*src != '\0' && dst < dst_end) {
+        if (*src != ' ') {
+            *dst++ = *src;
+            espacio_anterior = false;
         } else {
-            *q++ = *p;
-            ++count;
-            espacio_prev = 0;
+            // Encontramos espacio, solo copiamos si el anterior no fue espacio
+            if (!espacio_anterior) {
+                *dst++ = ' ';
+                espacio_anterior = true;
+            }
+            // si ya hubo espacio antes, no copiamos
         }
-        ++p;
+        ++src;
     }
 
-    // se crea funcion para eliminar espacio final si existe
-    if (count > 0 && *(q - 1) == ' ') {
-        --q;
-        --count;
+    // Eliminar espacio final si existe
+    if (dst > out && *(dst - 1) == ' ') {
+        --dst;
     }
 
-    *q = '\0';  // Terminar la cadena
-    return count;
+    *dst = '\0';
+
+    return dst - out; // longitud resultado
 }
 
 int main() {
     char entrada[1001];
     char salida[1001];
 
-    // Leer línea completa
-    fgets(entrada, sizeof(entrada), stdin);
+    cout << "Ingrese una línea: ";
+    cin.getline(entrada, 1001);
 
-    // Normalizar
-    size_t longitud = normalizar_espacios(entrada, salida, sizeof(salida));
+    size_t longitud = normalizar_espacios(entrada, salida, 1001);
 
-    // Se muestra resultado
-    printf("Resultado: \"%s\" (longitud %zu)\n", salida, longitud);
+    cout << "Salida: \"" << salida << "\"" << endl;
+    cout << "Longitud: " << longitud << endl;
+
     return 0;
 }
 
@@ -189,27 +194,28 @@ sumC: [15,8,11,14]
 
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <cstdlib> // malloc, free
+using namespace std;
 
-// Se crea una matriz dinámica de m filas y n columnas
+// Crear matriz dinámica m x n
 int **mat_crear(size_t m, size_t n) {
-    int **A = malloc(m * sizeof(int *));
-    if (A == NULL) return NULL;
+    int **mat = (int **)malloc(m * sizeof(int *));
+    if (!mat) return nullptr;
 
     for (size_t i = 0; i < m; ++i) {
-        A[i] = malloc(n * sizeof(int));
-        if (A[i] == NULL) {
-            // Liberar lo que se haya asignado si falla
-            for (size_t j = 0; j < i; ++j) free(A[j]);
-            free(A);
-            return NULL;
+        mat[i] = (int *)malloc(n * sizeof(int));
+        if (!mat[i]) {
+            // liberar memoria en caso de error
+            for (size_t j = 0; j < i; ++j) free(mat[j]);
+            free(mat);
+            return nullptr;
         }
     }
-    return A;
+    return mat;
 }
 
-// Se crea funcion para liberar la memoria de la matriz
+// Destruir matriz
 void mat_destruir(int **A, size_t m) {
     for (size_t i = 0; i < m; ++i) {
         free(A[i]);
@@ -217,65 +223,65 @@ void mat_destruir(int **A, size_t m) {
     free(A);
 }
 
-//Se calcula las sumas por fila y por columna
+// Calcular sumas de filas y columnas
 void mat_sumas(int **A, size_t m, size_t n, int *sumF, int *sumC) {
-    //Se Inicializa sumas
+    // Inicializar sumas
     for (size_t i = 0; i < m; ++i) sumF[i] = 0;
     for (size_t j = 0; j < n; ++j) sumC[j] = 0;
 
-    //Se Recorre la matriz usando punteros
+    // Sumar
     for (size_t i = 0; i < m; ++i) {
         for (size_t j = 0; j < n; ++j) {
-            int val = A[i][j];
-            sumF[i] += val;
-            sumC[j] += val;
+            sumF[i] += A[i][j];
+            sumC[j] += A[i][j];
         }
     }
 }
 
 int main() {
     size_t m, n;
-    scanf("%zu %zu", &m, &n);
+    cout << "Ingrese filas y columnas: ";
+    cin >> m >> n;
 
     int **mat = mat_crear(m, n);
-    if (mat == NULL) {
-        fprintf(stderr, "Error al crear la matriz\n");
+    if (!mat) {
+        cerr << "Error al asignar memoria\n";
         return 1;
     }
 
-    //Se crea la funcion para leer la matriz
+    cout << "Ingrese matriz (" << m << "x" << n << "):\n";
     for (size_t i = 0; i < m; ++i) {
         for (size_t j = 0; j < n; ++j) {
-            scanf("%d", &mat[i][j]);
+            cin >> mat[i][j];
         }
     }
 
-    // Crear arreglos para las sumas
-    int *sumF = malloc(m * sizeof(int));
-    int *sumC = malloc(n * sizeof(int));
+    int *sumF = new int[m];
+    int *sumC = new int[n];
 
     mat_sumas(mat, m, n, sumF, sumC);
 
-    // Se muestra resultados
-    printf("sumF: [");
+    cout << "sumF: [";
     for (size_t i = 0; i < m; ++i) {
-        printf("%d%s", sumF[i], (i < m - 1) ? "," : "");
+        cout << sumF[i];
+        if (i < m - 1) cout << ",";
     }
-    printf("]\n");
+    cout << "]\n";
 
-    printf("sumC: [");
+    cout << "sumC: [";
     for (size_t j = 0; j < n; ++j) {
-        printf("%d%s", sumC[j], (j < n - 1) ? "," : "");
+        cout << sumC[j];
+        if (j < n - 1) cout << ",";
     }
-    printf("]\n");
+    cout << "]\n";
 
-    // Se libera la memoria
-    free(sumF);
-    free(sumC);
     mat_destruir(mat, m);
+    delete[] sumF;
+    delete[] sumC;
 
     return 0;
 }
+
 
 
 
@@ -294,50 +300,79 @@ Caso(s) de prueba sugeridos:
 
 #include <iostream>
 #include <cstring>
-#include <algorithm>
+#include <cstdlib> // qsort
+using namespace std;
 
+// Definición del struct
 typedef struct {
     char nombre[40];
     int edad;
     double promedio;
 } Estudiante;
 
+// Comparador para qsort: promedio descendente
 int cmp_prom_desc(const void *a, const void *b) {
-    double pa = ((Estudiante *)a)->promedio;
-    double pb = ((Estudiante *)b)->promedio;
-    return (pb > pa) - (pb < pa);  // Orden descendente
+    const Estudiante *ea = (const Estudiante *)a;
+    const Estudiante *eb = (const Estudiante *)b;
+    if (ea->promedio < eb->promedio) return 1;
+    else if (ea->promedio > eb->promedio) return -1;
+    else return 0;
 }
 
+// Buscar nombre exacto, devuelve índice o -1
 int buscar_nombre(Estudiante *v, size_t n, const char *clave) {
-    for (size_t i = 0; i < n; ++i)
-        if (strcmp(v[i].nombre, clave) == 0) return i;
+    for (size_t i = 0; i < n; ++i) {
+        if (strcmp(v[i].nombre, clave) == 0)
+            return i;
+    }
     return -1;
 }
 
 int main() {
     size_t n;
-    std::cin >> n;
-    std::cin.ignore();
+    cout << "Ingrese número de estudiantes: ";
+    cin >> n;
+    cin.ignore(); // limpiar el buffer de entrada
 
-    Estudiante *v = new Estudiante[n];
+    Estudiante *est = new Estudiante[n];
 
+    // Leer datos
     for (size_t i = 0; i < n; ++i) {
-        std::cin.getline(v[i].nombre, 40);
-        std::cin >> v[i].edad >> v[i].promedio;
-        std::cin.ignore();
+        cout << "Estudiante " << i+1 << " nombre: ";
+        cin.getline(est[i].nombre, 40);
+        cout << "Edad: ";
+        cin >> est[i].edad;
+        cout << "Promedio: ";
+        cin >> est[i].promedio;
+        cin.ignore(); // limpiar buffer
     }
 
-    std::qsort(v, n, sizeof(Estudiante), cmp_prom_desc);
+    // Ordenar por promedio descendente
+    qsort(est, n, sizeof(Estudiante), cmp_prom_desc);
 
-    for (size_t i = 0; i < std::min(n, size_t(3)); ++i)
-        std::cout << v[i].nombre << " " << std::fixed << std::setprecision(2) << v[i].promedio << "\n";
+    // Imprimir Top-3
+    size_t top = n < 3 ? n : 3;
+    cout << "\nTop-" << top << " estudiantes por promedio:\n";
+    for (size_t i = 0; i < top; ++i) {
+        cout << est[i].nombre << " | Edad: " << est[i].edad
+             << " | Promedio: " << est[i].promedio << endl;
+    }
 
+    // Búsqueda por nombre
     char clave[40];
-    std::cin.getline(clave, 40);
-    int pos = buscar_nombre(v, n, clave);
-    std::cout << pos << "\n";
+    cout << "\nIngrese nombre a buscar: ";
+    cin.getline(clave, 40);
 
-    delete[] v;
+    int idx = buscar_nombre(est, n, clave);
+    if (idx != -1) {
+        cout << "Encontrado en índice " << idx << ": "
+             << est[idx].nombre << " | Edad: " << est[idx].edad
+             << " | Promedio: " << est[idx].promedio << endl;
+    } else {
+        cout << "No se encontró el estudiante con nombre \"" << clave << "\"\n";
+    }
+
+    delete[] est;
     return 0;
 }
 
@@ -360,64 +395,112 @@ Caso(s) de prueba sugeridos:
 
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
+using namespace std;
 
+// Nodo de la lista
 typedef struct Nodo {
     int x;
-    Nodo *sig;
+    struct Nodo *sig;
 } Nodo;
 
-void push_front(Nodo **l, int v) {
-    Nodo *n = new Nodo{v, *l};
-    *l = n;
+// Insertar al frente
+void push_front(Nodo **head, int val) {
+    Nodo *nuevo = (Nodo *)malloc(sizeof(Nodo));
+    if (!nuevo) {
+        cerr << "Error de memoria\n";
+        return;
+    }
+    nuevo->x = val;
+    nuevo->sig = *head;
+    *head = nuevo;
 }
 
-void push_back(Nodo **l, int v) {
-    Nodo *n = new Nodo{v, nullptr};
-    if (!*l) *l = n;
-    else {
-        Nodo *p = *l;
+// Insertar al final
+void push_back(Nodo **head, int val) {
+    Nodo *nuevo = (Nodo *)malloc(sizeof(Nodo));
+    if (!nuevo) {
+        cerr << "Error de memoria\n";
+        return;
+    }
+    nuevo->x = val;
+    nuevo->sig = nullptr;
+
+    if (*head == nullptr) {
+        *head = nuevo;
+    } else {
+        Nodo *p = *head;
         while (p->sig) p = p->sig;
-        p->sig = n;
+        p->sig = nuevo;
     }
 }
 
-void pop_front(Nodo **l) {
-    if (*l) {
-        Nodo *t = *l;
-        *l = t->sig;
-        delete t;
+// Eliminar primer nodo
+void pop_front(Nodo **head) {
+    if (*head == nullptr) return;
+    Nodo *tmp = *head;
+    *head = (*head)->sig;
+    free(tmp);
+}
+
+// Tamaño de la lista
+size_t size(Nodo *head) {
+    size_t cnt = 0;
+    while (head) {
+        ++cnt;
+        head = head->sig;
+    }
+    return cnt;
+}
+
+// Limpiar lista
+void clear(Nodo **head) {
+    while (*head) {
+        pop_front(head);
     }
 }
 
-void clear(Nodo **l) {
-    while (*l) pop_front(l);
-}
-
-void print(Nodo *l) {
-    while (l) {
-        std::cout << l->x << " ";
-        l = l->sig;
+// Imprimir lista
+void print_list(Nodo *head) {
+    Nodo *p = head;
+    while (p) {
+        cout << p->x;
+        if (p->sig) cout << " ";
+        p = p->sig;
     }
-    std::cout << "\n";
+    cout << endl;
 }
 
 int main() {
-    Nodo *lista = nullptr;
+    Nodo *head = nullptr;
     char cmd[10];
     int val;
 
-    while (std::cin >> cmd) {
-        if (!strcmp(cmd, "pf")) std::cin >> val, push_front(&lista, val);
-        else if (!strcmp(cmd, "pb")) std::cin >> val, push_back(&lista, val);
-        else if (!strcmp(cmd, "pop")) pop_front(&lista);
-        else if (!strcmp(cmd, "clear")) clear(&lista);
-        else if (!strcmp(cmd, "fin")) break;
+    while (true) {
+        cin >> cmd;
+        if (strcmp(cmd, "pf") == 0) {
+            cin >> val;
+            push_front(&head, val);
+        } else if (strcmp(cmd, "pb") == 0) {
+            cin >> val;
+            push_back(&head, val);
+        } else if (strcmp(cmd, "pop") == 0) {
+            pop_front(&head);
+        } else if (strcmp(cmd, "fin") == 0) {
+            break;
+        } else {
+            cerr << "Comando desconocido: " << cmd << endl;
+        }
     }
 
-    print(lista);
-    clear(&lista);
+    print_list(head);
+    clear(&head);
+
     return 0;
 }
+
+
+
 
 Ejercicio 7: Punteros a función (callbacks) — 10 pts
 Enunciado:
@@ -430,32 +513,63 @@ void aplicar(int *a, size_t n, int (*op)(int));
 
 
 #include <iostream>
+using namespace std;
 
-int doble(int x)     { return 2 * x; }
-int cuadrado(int x)  { return x * x; }
+// Operaciones
+int doble(int x) {
+    return 2 * x;
+}
 
+int cuadrado(int x) {
+    return x * x;
+}
+
+// Aplicar función a cada elemento del arreglo
 void aplicar(int *a, size_t n, int (*op)(int)) {
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; i < n; ++i) {
         a[i] = op(a[i]);
+    }
+}
+
+// Imprimir arreglo
+void print_array(int *a, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        cout << a[i];
+        if (i < n - 1) cout << " ";
+    }
+    cout << endl;
 }
 
 int main() {
-    int a[] = {1, 2, 3, 4, 5};
-    size_t n = sizeof(a) / sizeof(a[0]);
+    size_t n;
+    cout << "Ingrese tamaño del arreglo: ";
+    cin >> n;
+
+    int *arr = new int[n];
+    cout << "Ingrese elementos:\n";
+    for (size_t i = 0; i < n; ++i) {
+        cin >> arr[i];
+    }
+
     int opcion;
+    cout << "\nMenú:\n1. Doble\n2. Cuadrado\nElija opción: ";
+    cin >> opcion;
 
-    std::cout << "1. Doble\n2. Cuadrado\nOpción: ";
-    std::cin >> opcion;
+    if (opcion == 1) {
+        aplicar(arr, n, doble);
+    } else if (opcion == 2) {
+        aplicar(arr, n, cuadrado);
+    } else {
+        cout << "Opción no válida.\n";
+    }
 
-    if (opcion == 1) aplicar(a, n, doble);
-    else if (opcion == 2) aplicar(a, n, cuadrado);
+    cout << "Arreglo resultante:\n";
+    print_array(arr, n);
 
-    for (size_t i = 0; i < n; ++i)
-        std::cout << a[i] << " ";
-    std::cout << "\n";
-
+    delete[] arr;
     return 0;
 }
+
 
 
 
@@ -473,8 +587,9 @@ Caso(s) de prueba sugeridos:
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <cstring>
+#include <cstdlib>
+using namespace std;
 
 typedef struct {
     char prod[32];
@@ -482,48 +597,94 @@ typedef struct {
     double precio;
 } Venta;
 
+// Cargar ventas desde archivo CSV
+size_t cargar_ventas(const char *filename, Venta **arr) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error al abrir archivo " << filename << endl;
+        return 0;
+    }
+
+    size_t capacidad = 10;
+    size_t n = 0;
+    *arr = (Venta *)malloc(capacidad * sizeof(Venta));
+    if (!*arr) {
+        cerr << "Error de memoria\n";
+        return 0;
+    }
+
+    string linea;
+    while (getline(file, linea)) {
+        if (n >= capacidad) {
+            capacidad *= 2;
+            *arr = (Venta *)realloc(*arr, capacidad * sizeof(Venta));
+            if (!*arr) {
+                cerr << "Error de memoria\n";
+                return n;
+            }
+        }
+
+        stringstream ss(linea);
+        string campo;
+        // Leer producto
+        if (!getline(ss, campo, ',')) continue;
+        strncpy((*arr)[n].prod, campo.c_str(), 31);
+        (*arr)[n].prod[31] = '\0';
+
+        // Leer unidades
+        if (!getline(ss, campo, ',')) continue;
+        (*arr)[n].unidades = atoi(campo.c_str());
+
+        // Leer precio
+        if (!getline(ss, campo, ',')) continue;
+        (*arr)[n].precio = atof(campo.c_str());
+
+        n++;
+    }
+
+    file.close();
+    return n;
+}
+
+// Calcular estadísticas
+void estadisticas(Venta *arr, size_t n, double &total, char *mas_vendido, double &ticket_prom) {
+    total = 0;
+    ticket_prom = 0;
+    int max_unidades = -1;
+    for (size_t i = 0; i < n; ++i) {
+        total += arr[i].unidades * arr[i].precio;
+        ticket_prom += arr[i].precio;
+        if (arr[i].unidades > max_unidades) {
+            max_unidades = arr[i].unidades;
+            strncpy(mas_vendido, arr[i].prod, 31);
+            mas_vendido[31] = '\0';
+        }
+    }
+    ticket_prom = n > 0 ? ticket_prom / n : 0;
+}
+
 int main() {
-    std::ifstream f("ventas.csv");
-    if (!f) {
-        std::perror("Archivo");
+    const char *filename = "ventas.csv"; // Cambiar al nombre del archivo
+    Venta *ventas = nullptr;
+
+    size_t n = cargar_ventas(filename, &ventas);
+    if (n == 0) {
+        cout << "No se cargaron ventas.\n";
         return 1;
     }
 
-    std::vector<Venta> v;
-    std::string linea;
+    double total, ticket_prom;
+    char mas_vendido[32];
+    estadisticas(ventas, n, total, mas_vendido, ticket_prom);
 
-    while (std::getline(f, linea)) {
-        std::istringstream ss(linea);
-        std::string nombre;
-        int unidades;
-        double precio;
+    cout << "Total vendido: " << total << endl;
+    cout << "Producto más vendido: " << mas_vendido << endl;
+    cout << "Ticket promedio: " << ticket_prom << endl;
 
-        if (std::getline(ss, nombre, ',') && ss >> unidades && ss.get() == ',' && ss >> precio) {
-            Venta temp;
-            std::strncpy(temp.prod, nombre.c_str(), 31);
-            temp.prod[31] = '\0';
-            temp.unidades = unidades;
-            temp.precio = precio;
-            v.push_back(temp);
-        }
-    }
-
-    double total = 0;
-    int maxu = -1, imax = -1;
-    for (size_t i = 0; i < v.size(); ++i) {
-        total += v[i].unidades * v[i].precio;
-        if (v[i].unidades > maxu) {
-            maxu = v[i].unidades;
-            imax = i;
-        }
-    }
-
-    std::cout << "Total: " << std::fixed << std::setprecision(2) << total << "\n";
-    if (imax >= 0) std::cout << "Más vendido: " << v[imax].prod << " (" << v[imax].unidades << ")\n";
-    if (!v.empty()) std::cout << "Ticket promedio: " << std::fixed << std::setprecision(2) << total / v.size() << "\n";
-
+    free(ventas);
     return 0;
 }
+
 
 Bonus (hasta +5 pts): Vector dinámico genérico
 Implementa un vector tipo void* con capacidad y tamaño, push_back, get, set y redimensionamiento
@@ -540,40 +701,63 @@ struct Vector {
     size_t elem_size;
 };
 
-// Crear un nuevo vector
 Vector* vec_new(size_t elem_size) {
-    Vector* v = new Vector;
+    Vector* v = (Vector*)std::malloc(sizeof(Vector));
+    if (!v) return nullptr;
+
     v->size = 0;
     v->cap = 4;
     v->elem_size = elem_size;
-    v->data = malloc(v->cap * elem_size);
+    v->data = std::malloc(v->cap * elem_size);
+    if (!v->data) {
+        std::free(v);
+        return nullptr;
+    }
     return v;
 }
 
-// Liberar memoria del vector
 void vec_free(Vector* v) {
-    free(v->data);
-    delete v;
+    if (!v) return;
+    std::free(v->data);
+    std::free(v);
 }
 
-// Agregar un elemento al final
 void vec_push(Vector* v, const void* elem) {
     if (v->size == v->cap) {
         v->cap *= 2;
-        v->data = realloc(v->data, v->cap * v->elem_size);
+        void* tmp = std::realloc(v->data, v->cap * v->elem_size);
+        if (!tmp) return;
+        v->data = tmp;
     }
     std::memcpy((char*)v->data + v->size * v->elem_size, elem, v->elem_size);
     v->size++;
 }
 
-// Obtener puntero al elemento en la posición i
-void* vec_get(Vector* v, size_t i) {
+void* vec_get(const Vector* v, size_t i) {
     if (i >= v->size) return nullptr;
     return (char*)v->data + i * v->elem_size;
 }
 
-// Establecer el valor del elemento en la posición i
 void vec_set(Vector* v, size_t i, const void* elem) {
     if (i >= v->size) return;
     std::memcpy((char*)v->data + i * v->elem_size, elem, v->elem_size);
+}
+
+// agregamos una función main de prueba
+int main() {
+    Vector* v = vec_new(sizeof(int));
+
+    for (int i = 0; i < 10; ++i) {
+        vec_push(v, &i);
+    }
+
+    std::cout << "Vector contents:\n";
+    for (size_t i = 0; i < v->size; ++i) {
+        int* val = (int*)vec_get(v, i);
+        std::cout << *val << " ";
+    }
+    std::cout << std::endl;
+
+    vec_free(v);
+    return 0;
 }
