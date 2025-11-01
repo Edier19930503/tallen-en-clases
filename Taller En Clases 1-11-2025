@@ -8,55 +8,44 @@ Ejemplo:
 Entrada: 5\n3 8 -1 4 4 → Salida: min=-1 max=8 prom=3.60
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <iomanip>
 
-// Se crea función para leer el arreglo usando punteros
 void leer_arreglo(int *a, size_t n) {
     for (size_t i = 0; i < n; ++i) {
-        scanf("%d", a + i);
+        std::cin >> *(a + i);
     }
 }
 
-// Se crea función para calcular mínimo, máximo y promedio usando punteros
 void min_max_prom(const int *a, size_t n, int *minv, int *maxv, double *prom) {
-    const int *p = a;
-    *minv = *maxv = *p;
+    *minv = *maxv = *a;
     long long suma = 0;
 
-    for (size_t i = 0; i < n; ++i, ++p) {
+    for (const int *p = a; p < a + n; ++p) {
         if (*p < *minv) *minv = *p;
         if (*p > *maxv) *maxv = *p;
         suma += *p;
     }
 
-    *prom = (double)suma / n;
+    *prom = static_cast<double>(suma) / n;
 }
 
 int main() {
     size_t n;
-    scanf("%zu", &n);
+    std::cin >> n;
 
-    // Se crea reserva de memoria dinámica
-    int *arreglo = malloc(n * sizeof(int));
-    if (arreglo == NULL) {
-        fprintf(stderr, "Error: no se pudo asignar memoria\n");
-        return 1;
-    }
-
+    int *arreglo = new int[n];
     leer_arreglo(arreglo, n);
 
     int minv, maxv;
     double prom;
     min_max_prom(arreglo, n, &minv, &maxv, &prom);
 
-    printf("min=%d max=%d prom=%.2f\n", minv, maxv, prom);
+    std::cout << "min=" << minv << " max=" << maxv << " prom=" << std::fixed << std::setprecision(2) << prom << std::endl;
 
-  // Se ibera la memoria
-    free(arreglo);
+    delete[] arreglo;
     return 0;
 }
-
 
 Ejercicio 2: Rotación circular in-place — 12 pts Enunciado:
 Dado un arreglo de n enteros y un desplazamiento k, rota a la derecha k posiciones in-place. Usa una función auxiliar reverse y punteros.
@@ -303,23 +292,22 @@ Caso(s) de prueba sugeridos:
 3. Permite buscar por nombre exacto y devuelve el índice o -1.
 
 
-#include <stdio.h>    // Para entrada/salida estándar
-#include <stdlib.h>   // Para malloc, free, qsort
-#include <string.h>   // Para funciones de manejo de cadenas como strcmp, fgets, strcspn
+#include <iostream>
+#include <cstring>
+#include <algorithm>
 
-// Se define la estructura Estudiante con nombre, edad y promedio
 typedef struct {
-    char nombre[40];     // Nombre del estudiante (máximo 39 caracteres + '\0')
-    int edad;            // Edad del estudiante
-    double promedio;     // Promedio del estudiante
+    char nombre[40];
+    int edad;
+    double promedio;
 } Estudiante;
 
-// Se crea la función de comparación para qsort: ordena por promedio descendente
 int cmp_prom_desc(const void *a, const void *b) {
-    return ((Estudiante *)b)->promedio > ((Estudiante *)a)->promedio ? 1 : -1;
+    double pa = ((Estudiante *)a)->promedio;
+    double pb = ((Estudiante *)b)->promedio;
+    return (pb > pa) - (pb < pa);  // Orden descendente
 }
 
-// Busca un estudiante por nombre exacto, devuelve índice o -1 si no lo encuentra
 int buscar_nombre(Estudiante *v, size_t n, const char *clave) {
     for (size_t i = 0; i < n; ++i)
         if (strcmp(v[i].nombre, clave) == 0) return i;
@@ -328,35 +316,28 @@ int buscar_nombre(Estudiante *v, size_t n, const char *clave) {
 
 int main() {
     size_t n;
-    scanf("%zu\n", &n);  // Lee la cantidad de estudiantes
+    std::cin >> n;
+    std::cin.ignore();
 
-    //se reserva memoria para n estudiantes
-    Estudiante *v = malloc(n * sizeof(Estudiante));
+    Estudiante *v = new Estudiante[n];
 
-    // Lee los datos de cada estudiante
     for (size_t i = 0; i < n; ++i) {
-        fgets(v[i].nombre, 40, stdin);  // Lee el nombre
-        v[i].nombre[strcspn(v[i].nombre, "\n")] = 0;  // Elimina el salto de línea
-        scanf("%d %lf\n", &v[i].edad, &v[i].promedio);  // Lee edad y promedio
+        std::cin.getline(v[i].nombre, 40);
+        std::cin >> v[i].edad >> v[i].promedio;
+        std::cin.ignore();
     }
 
-    // Ordena los estudiantes por promedio descendente
-    qsort(v, n, sizeof(Estudiante), cmp_prom_desc);
+    std::qsort(v, n, sizeof(Estudiante), cmp_prom_desc);
 
-    // Imprime el top 3 (o menos si hay menos de 3 estudiantes)
-    for (size_t i = 0; i < (n < 3 ? n : 3); ++i)
-        printf("%s %.2f\n", v[i].nombre, v[i].promedio);
+    for (size_t i = 0; i < std::min(n, size_t(3)); ++i)
+        std::cout << v[i].nombre << " " << std::fixed << std::setprecision(2) << v[i].promedio << "\n";
 
-    // Lee un nombre para buscar
     char clave[40];
-    fgets(clave, 40, stdin);
-    clave[strcspn(clave, "\n")] = 0;  // Elimina el salto de línea
-
-    // Busca el nombre en el arreglo y muestra la posición
+    std::cin.getline(clave, 40);
     int pos = buscar_nombre(v, n, clave);
-    printf("%d\n", pos);  // Imprime el índice o -1 si no se encontró
+    std::cout << pos << "\n";
 
-    free(v);  // Libera la memoria reservada
+    delete[] v;
     return 0;
 }
 
@@ -377,46 +358,66 @@ Caso(s) de prueba sugeridos:
 8. pf 7
 9. fin → salida: 7 2 9
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstring>
 
-typedef struct Nodo { int x; struct Nodo *sig; } Nodo;
+typedef struct Nodo {
+    int x;
+    Nodo *sig;
+} Nodo;
 
 void push_front(Nodo **l, int v) {
-    Nodo *n = malloc(sizeof(Nodo)); n->x = v; n->sig = *l; *l = n;
+    Nodo *n = new Nodo{v, *l};
+    *l = n;
 }
 
 void push_back(Nodo **l, int v) {
-    Nodo *n = malloc(sizeof(Nodo)); n->x = v; n->sig = NULL;
+    Nodo *n = new Nodo{v, nullptr};
     if (!*l) *l = n;
-    else { Nodo *p = *l; while (p->sig) p = p->sig; p->sig = n; }
+    else {
+        Nodo *p = *l;
+        while (p->sig) p = p->sig;
+        p->sig = n;
+    }
 }
 
 void pop_front(Nodo **l) {
-    if (*l) { Nodo *t = *l; *l = t->sig; free(t); }
+    if (*l) {
+        Nodo *t = *l;
+        *l = t->sig;
+        delete t;
+    }
 }
 
-void clear(Nodo **l) { while (*l) pop_front(l); }
+void clear(Nodo **l) {
+    while (*l) pop_front(l);
+}
 
-void print(Nodo *l) { while (l) { printf("%d ", l->x); l = l->sig; } }
+void print(Nodo *l) {
+    while (l) {
+        std::cout << l->x << " ";
+        l = l->sig;
+    }
+    std::cout << "\n";
+}
 
 int main() {
-    Nodo *lista = NULL;
-    char cmd[10]; int val;
+    Nodo *lista = nullptr;
+    char cmd[10];
+    int val;
 
-    while (scanf("%s", cmd) == 1) {
-        if (!strcmp(cmd, "pf")) scanf("%d", &val), push_front(&lista, val);
-        else if (!strcmp(cmd, "pb")) scanf("%d", &val), push_back(&lista, val);
+    while (std::cin >> cmd) {
+        if (!strcmp(cmd, "pf")) std::cin >> val, push_front(&lista, val);
+        else if (!strcmp(cmd, "pb")) std::cin >> val, push_back(&lista, val);
         else if (!strcmp(cmd, "pop")) pop_front(&lista);
         else if (!strcmp(cmd, "clear")) clear(&lista);
         else if (!strcmp(cmd, "fin")) break;
     }
 
-    print(lista); clear(&lista);
+    print(lista);
+    clear(&lista);
     return 0;
 }
-
 
 Ejercicio 7: Punteros a función (callbacks) — 10 pts
 Enunciado:
@@ -428,7 +429,7 @@ int cuadrado(int x);
 void aplicar(int *a, size_t n, int (*op)(int));
 
 
-#include <stdio.h>
+#include <iostream>
 
 int doble(int x)     { return 2 * x; }
 int cuadrado(int x)  { return x * x; }
@@ -443,19 +444,18 @@ int main() {
     size_t n = sizeof(a) / sizeof(a[0]);
     int opcion;
 
-    printf("1. Doble\n2. Cuadrado\nOpción: ");
-    scanf("%d", &opcion);
+    std::cout << "1. Doble\n2. Cuadrado\nOpción: ";
+    std::cin >> opcion;
 
     if (opcion == 1) aplicar(a, n, doble);
     else if (opcion == 2) aplicar(a, n, cuadrado);
 
     for (size_t i = 0; i < n; ++i)
-        printf("%d ", a[i]);
-    printf("\n");
+        std::cout << a[i] << " ";
+    std::cout << "\n";
 
     return 0;
 }
-
 
 
 
@@ -470,76 +470,110 @@ Caso(s) de prueba sugeridos:
 10. CSV corto con 3–5 líneas; valida totales.
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <cstring>
 
-typedef struct { char prod[32]; int unidades; double precio; } Venta;
+typedef struct {
+    char prod[32];
+    int unidades;
+    double precio;
+} Venta;
 
 int main() {
-    FILE *f = fopen("ventas.csv", "r");
-    if (!f) return perror("Archivo"), 1;
+    std::ifstream f("ventas.csv");
+    if (!f) {
+        std::perror("Archivo");
+        return 1;
+    }
 
-    Venta *v = NULL;
-    size_t n = 0;
-    char l[128];
-    while (fgets(l, sizeof l, f)) {
-        Venta temp;
-        if (sscanf(l, "%31[^,],%d,%lf", temp.prod, &temp.unidades, &temp.precio) == 3) {
-            v = realloc(v, ++n * sizeof(Venta));
-            if (!v) return perror("Memoria"), 1;
-            v[n - 1] = temp;
+    std::vector<Venta> v;
+    std::string linea;
+
+    while (std::getline(f, linea)) {
+        std::istringstream ss(linea);
+        std::string nombre;
+        int unidades;
+        double precio;
+
+        if (std::getline(ss, nombre, ',') && ss >> unidades && ss.get() == ',' && ss >> precio) {
+            Venta temp;
+            std::strncpy(temp.prod, nombre.c_str(), 31);
+            temp.prod[31] = '\0';
+            temp.unidades = unidades;
+            temp.precio = precio;
+            v.push_back(temp);
         }
     }
-    fclose(f);
 
     double total = 0;
     int maxu = -1, imax = -1;
-    for (size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < v.size(); ++i) {
         total += v[i].unidades * v[i].precio;
-        if (v[i].unidades > maxu) maxu = v[i].unidades, imax = i;
+        if (v[i].unidades > maxu) {
+            maxu = v[i].unidades;
+            imax = i;
+        }
     }
 
-    printf("Total: %.2f\n", total);
-    if (imax >= 0) printf("Más vendido: %s (%d)\n", v[imax].prod, v[imax].unidades);
-    if (n) printf("Ticket promedio: %.2f\n", total / n);
+    std::cout << "Total: " << std::fixed << std::setprecision(2) << total << "\n";
+    if (imax >= 0) std::cout << "Más vendido: " << v[imax].prod << " (" << v[imax].unidades << ")\n";
+    if (!v.empty()) std::cout << "Ticket promedio: " << std::fixed << std::setprecision(2) << total / v.size() << "\n";
 
-    free(v);
     return 0;
 }
 
+Bonus (hasta +5 pts): Vector dinámico genérico
+Implementa un vector tipo void* con capacidad y tamaño, push_back, get, set y redimensionamiento
+por duplicación.
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
 
-typedef struct {
-    void *data;
-    size_t size, cap, elem;
-} Vector;
+struct Vector {
+    void* data;
+    size_t size;
+    size_t cap;
+    size_t elem_size;
+};
 
-Vector *vec_new(size_t elem) {
-    Vector *v = malloc(sizeof(Vector));
-    v->size = 0; v->cap = 4; v->elem = elem;
-    v->data = malloc(v->cap * elem);
+// Crear un nuevo vector
+Vector* vec_new(size_t elem_size) {
+    Vector* v = new Vector;
+    v->size = 0;
+    v->cap = 4;
+    v->elem_size = elem_size;
+    v->data = malloc(v->cap * elem_size);
     return v;
 }
 
-void vec_free(Vector *v) { free(v->data); free(v); }
+// Liberar memoria del vector
+void vec_free(Vector* v) {
+    free(v->data);
+    delete v;
+}
 
-void vec_push(Vector *v, void *e) {
+// Agregar un elemento al final
+void vec_push(Vector* v, const void* elem) {
     if (v->size == v->cap) {
         v->cap *= 2;
-        v->data = realloc(v->data, v->cap * v->elem);
+        v->data = realloc(v->data, v->cap * v->elem_size);
     }
-    memcpy((char*)v->data + v->size++ * v->elem, e, v->elem);
+    std::memcpy((char*)v->data + v->size * v->elem_size, elem, v->elem_size);
+    v->size++;
 }
 
-void *vec_get(Vector *v, size_t i) {
-    return (i < v->size) ? (char*)v->data + i * v->elem : NULL;
+// Obtener puntero al elemento en la posición i
+void* vec_get(Vector* v, size_t i) {
+    if (i >= v->size) return nullptr;
+    return (char*)v->data + i * v->elem_size;
 }
 
-void vec_set(Vector *v, size_t i, void *e) {
-    if (i < v->size)
-        memcpy((char*)v->data + i * v->elem, e, v->elem);
+// Establecer el valor del elemento en la posición i
+void vec_set(Vector* v, size_t i, const void* elem) {
+    if (i >= v->size) return;
+    std::memcpy((char*)v->data + i * v->elem_size, elem, v->elem_size);
 }
