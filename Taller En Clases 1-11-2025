@@ -1,0 +1,545 @@
+Ejercicio 1: Estadísticas básicas de un arreglo — 10 pts
+Enunciado:
+Lee n (1 ≤ n ≤ 10^5) y luego n enteros. Calcula mínimo, máximo y promedio (double) usando punteros para recorrer el arreglo. Implementa funciones separar lectura y cálculo.
+Firmas/Interfaz sugerida:
+void leer_arreglo(int *a, size_t n);
+void min_max_prom(const int *a, size_t n, int *minv, int *maxv, double *prom);
+Ejemplo:
+Entrada: 5\n3 8 -1 4 4 → Salida: min=-1 max=8 prom=3.60
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Se crea función para leer el arreglo usando punteros
+void leer_arreglo(int *a, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        scanf("%d", a + i);
+    }
+}
+
+// Se crea función para calcular mínimo, máximo y promedio usando punteros
+void min_max_prom(const int *a, size_t n, int *minv, int *maxv, double *prom) {
+    const int *p = a;
+    *minv = *maxv = *p;
+    long long suma = 0;
+
+    for (size_t i = 0; i < n; ++i, ++p) {
+        if (*p < *minv) *minv = *p;
+        if (*p > *maxv) *maxv = *p;
+        suma += *p;
+    }
+
+    *prom = (double)suma / n;
+}
+
+int main() {
+    size_t n;
+    scanf("%zu", &n);
+
+    // Se crea reserva de memoria dinámica
+    int *arreglo = malloc(n * sizeof(int));
+    if (arreglo == NULL) {
+        fprintf(stderr, "Error: no se pudo asignar memoria\n");
+        return 1;
+    }
+
+    leer_arreglo(arreglo, n);
+
+    int minv, maxv;
+    double prom;
+    min_max_prom(arreglo, n, &minv, &maxv, &prom);
+
+    printf("min=%d max=%d prom=%.2f\n", minv, maxv, prom);
+
+  // Se ibera la memoria
+    free(arreglo);
+    return 0;
+}
+
+
+Ejercicio 2: Rotación circular in-place — 12 pts Enunciado:
+Dado un arreglo de n enteros y un desplazamiento k, rota a la derecha k posiciones in-place. Usa una función auxiliar reverse y punteros.
+Firmas/Interfaz sugerida:
+void reverse(int *a, size_t i, size_t j);
+void rotar_derecha(int *a, size_t n, size_t k);
+Caso(s) de prueba sugeridos:
+1. [1,2,3,4,5], k=2 → [4,5,1,2,3]
+
+
+
+#include <stdio.h>
+
+// Se crea funcion  el segmento del arreglo desde índice i hasta j usando punteros
+void reverse(int *a, size_t i, size_t j) {
+    int *left = a + i;
+    int *right = a + j;
+    while (left < right) {
+        int temp = *left;
+        *left = *right;
+        *right = temp;
+        ++left;
+        --right;
+    }
+}
+
+// Se crea funcion para rotar el arreglo a la derecha k posiciones usando tres reversos
+void rotar_derecha(int *a, size_t n, size_t k) {
+    if (n == 0) return;
+    k %= n;  // Asegura que k no sea mayor que n
+ // Paso 1: invertir todo el arreglo
+    reverse(a, 0, n - 1);     
+// Paso 2: invertir los primeros k elementos
+    reverse(a, 0, k - 1);   
+// Paso 3: invertir el resto
+    reverse(a, k, n - 1);       
+}
+
+int main() {
+    int a[] = {1, 2, 3, 4, 5};
+    size_t n = sizeof(a) / sizeof(a[0]);
+    size_t k = 2;
+
+    rotar_derecha(a, n, k);
+
+    // Se muestra resultado
+    for (size_t i = 0; i < n; ++i) {
+        printf("%d ", a[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+
+
+
+Ejercicio 3: Normalizar cadenas (arreglo de chars) — 12 pts Enunciado:
+Lee una línea (≤ 1000 chars) y normalízala: quita espacios duplicados y recorta extremos.
+Implementa con punteros (char *src, char *dst) y sin usar strtok.
+Firmas/Interfaz sugerida:
+size_t normalizar_espacios(const char *in, char *out, size_t outcap);
+Ejemplo:
+Entrada: " hola mundo C " → Salida: "hola mundo C" (longitud 12)
+
+
+#include <stdio.h>
+#include <ctype.h>
+
+// Se vrea funcion para normalizar la cadena: elimina espacios duplicados y recorta extremos
+size_t normalizar_espacios(const char *src, char *dst, size_t outcap) {
+    const char *p = src;
+    char *q = dst;
+    size_t count = 0;
+
+    // Se crea funcion para saltar espacios iniciales
+    while (*p && isspace((unsigned char)*p)) {
+        ++p;
+    }
+
+    int espacio_prev = 0;
+
+    while (*p && count + 1 < outcap) {
+        if (isspace((unsigned char)*p)) {
+            if (!espacio_prev) {
+                *q++ = ' ';
+                ++count;
+                espacio_prev = 1;
+            }
+        } else {
+            *q++ = *p;
+            ++count;
+            espacio_prev = 0;
+        }
+        ++p;
+    }
+
+    // se crea funcion para eliminar espacio final si existe
+    if (count > 0 && *(q - 1) == ' ') {
+        --q;
+        --count;
+    }
+
+    *q = '\0';  // Terminar la cadena
+    return count;
+}
+
+int main() {
+    char entrada[1001];
+    char salida[1001];
+
+    // Leer línea completa
+    fgets(entrada, sizeof(entrada), stdin);
+
+    // Normalizar
+    size_t longitud = normalizar_espacios(entrada, salida, sizeof(salida));
+
+    // Se muestra resultado
+    printf("Resultado: \"%s\" (longitud %zu)\n", salida, longitud);
+    return 0;
+}
+
+
+
+Ejercicio 4: Matriz — suma por filas y columnas — 15 pts Enunciado:
+Dada una matriz m×n de enteros, calcula dos arreglos: sumFila[m] y sumCol[n]. Usa funciones y
+punteros a punteros (int **mat) o representación lineal (int *mat = malloc(m*n*sizeof(int))).
+Firmas/Interfaz sugerida:
+int **mat_crear(size_t m, size_t n);
+void mat_destruir(int **A, size_t m);
+void mat_sumas(int **A, size_t m, size_t n, int *sumF, int *sumC);
+Ejemplo:
+Entrada:
+3 4
+1 2 3 4
+5 6 7 8
+9 0 1 2
+Salida:
+sumF: [10,26,12]
+sumC: [15,8,11,14]
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Se crea una matriz dinámica de m filas y n columnas
+int **mat_crear(size_t m, size_t n) {
+    int **A = malloc(m * sizeof(int *));
+    if (A == NULL) return NULL;
+
+    for (size_t i = 0; i < m; ++i) {
+        A[i] = malloc(n * sizeof(int));
+        if (A[i] == NULL) {
+            // Liberar lo que se haya asignado si falla
+            for (size_t j = 0; j < i; ++j) free(A[j]);
+            free(A);
+            return NULL;
+        }
+    }
+    return A;
+}
+
+// Se crea funcion para liberar la memoria de la matriz
+void mat_destruir(int **A, size_t m) {
+    for (size_t i = 0; i < m; ++i) {
+        free(A[i]);
+    }
+    free(A);
+}
+
+//Se calcula las sumas por fila y por columna
+void mat_sumas(int **A, size_t m, size_t n, int *sumF, int *sumC) {
+    //Se Inicializa sumas
+    for (size_t i = 0; i < m; ++i) sumF[i] = 0;
+    for (size_t j = 0; j < n; ++j) sumC[j] = 0;
+
+    //Se Recorre la matriz usando punteros
+    for (size_t i = 0; i < m; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            int val = A[i][j];
+            sumF[i] += val;
+            sumC[j] += val;
+        }
+    }
+}
+
+int main() {
+    size_t m, n;
+    scanf("%zu %zu", &m, &n);
+
+    int **mat = mat_crear(m, n);
+    if (mat == NULL) {
+        fprintf(stderr, "Error al crear la matriz\n");
+        return 1;
+    }
+
+    //Se crea la funcion para leer la matriz
+    for (size_t i = 0; i < m; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            scanf("%d", &mat[i][j]);
+        }
+    }
+
+    // Crear arreglos para las sumas
+    int *sumF = malloc(m * sizeof(int));
+    int *sumC = malloc(n * sizeof(int));
+
+    mat_sumas(mat, m, n, sumF, sumC);
+
+    // Se muestra resultados
+    printf("sumF: [");
+    for (size_t i = 0; i < m; ++i) {
+        printf("%d%s", sumF[i], (i < m - 1) ? "," : "");
+    }
+    printf("]\n");
+
+    printf("sumC: [");
+    for (size_t j = 0; j < n; ++j) {
+        printf("%d%s", sumC[j], (j < n - 1) ? "," : "");
+    }
+    printf("]\n");
+
+    // Se libera la memoria
+    free(sumF);
+    free(sumC);
+    mat_destruir(mat, m);
+
+    return 0;
+}
+
+
+
+Ejercicio 5: Struct + funciones — registro de estudiantes — 15 pts
+Enunciado:
+Define Estudiante { char nombre[40]; int edad; double promedio; }. Lee n estudiantes, ordénalos por
+promedio descendente usando punteros a struct. Implementa búsqueda por nombre.
+Firmas/Interfaz sugerida:
+typedef struct { char nombre[40]; int edad; double promedio; } Estudiante;
+int cmp_prom_desc(const void *a, const void *b);
+int buscar_nombre(Estudiante *v, size_t n, const char *clave);
+Caso(s) de prueba sugeridos:
+2. Imprime el Top-3 por promedio.
+3. Permite buscar por nombre exacto y devuelve el índice o -1.
+
+
+#include <stdio.h>    // Para entrada/salida estándar
+#include <stdlib.h>   // Para malloc, free, qsort
+#include <string.h>   // Para funciones de manejo de cadenas como strcmp, fgets, strcspn
+
+// Se define la estructura Estudiante con nombre, edad y promedio
+typedef struct {
+    char nombre[40];     // Nombre del estudiante (máximo 39 caracteres + '\0')
+    int edad;            // Edad del estudiante
+    double promedio;     // Promedio del estudiante
+} Estudiante;
+
+// Se crea la función de comparación para qsort: ordena por promedio descendente
+int cmp_prom_desc(const void *a, const void *b) {
+    return ((Estudiante *)b)->promedio > ((Estudiante *)a)->promedio ? 1 : -1;
+}
+
+// Busca un estudiante por nombre exacto, devuelve índice o -1 si no lo encuentra
+int buscar_nombre(Estudiante *v, size_t n, const char *clave) {
+    for (size_t i = 0; i < n; ++i)
+        if (strcmp(v[i].nombre, clave) == 0) return i;
+    return -1;
+}
+
+int main() {
+    size_t n;
+    scanf("%zu\n", &n);  // Lee la cantidad de estudiantes
+
+    //se reserva memoria para n estudiantes
+    Estudiante *v = malloc(n * sizeof(Estudiante));
+
+    // Lee los datos de cada estudiante
+    for (size_t i = 0; i < n; ++i) {
+        fgets(v[i].nombre, 40, stdin);  // Lee el nombre
+        v[i].nombre[strcspn(v[i].nombre, "\n")] = 0;  // Elimina el salto de línea
+        scanf("%d %lf\n", &v[i].edad, &v[i].promedio);  // Lee edad y promedio
+    }
+
+    // Ordena los estudiantes por promedio descendente
+    qsort(v, n, sizeof(Estudiante), cmp_prom_desc);
+
+    // Imprime el top 3 (o menos si hay menos de 3 estudiantes)
+    for (size_t i = 0; i < (n < 3 ? n : 3); ++i)
+        printf("%s %.2f\n", v[i].nombre, v[i].promedio);
+
+    // Lee un nombre para buscar
+    char clave[40];
+    fgets(clave, 40, stdin);
+    clave[strcspn(clave, "\n")] = 0;  // Elimina el salto de línea
+
+    // Busca el nombre en el arreglo y muestra la posición
+    int pos = buscar_nombre(v, n, clave);
+    printf("%d\n", pos);  // Imprime el índice o -1 si no se encontró
+
+    free(v);  // Libera la memoria reservada
+    return 0;
+}
+
+
+Ejercicio 6: Lista dinámica simple (memoria dinámica y punteros) — 16 pts
+Enunciado:
+Implementa una lista enlazada simple de int con operaciones: push_front, push_back, pop_front,
+size, clear. Lee comandos desde stdin y ejecuta. Al final imprime el contenido.
+• Manejar correctamente malloc/free.
+• Usar funciones por operación, sin variables globales.
+Firmas/Interfaz sugerida:
+typedef struct Nodo { int x; struct Nodo *sig; } Nodo;
+Caso(s) de prueba sugeridos:
+4. pf 3
+5. pf 2
+6. pb 9
+7. pop
+8. pf 7
+9. fin → salida: 7 2 9
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Nodo { int x; struct Nodo *sig; } Nodo;
+
+void push_front(Nodo **l, int v) {
+    Nodo *n = malloc(sizeof(Nodo)); n->x = v; n->sig = *l; *l = n;
+}
+
+void push_back(Nodo **l, int v) {
+    Nodo *n = malloc(sizeof(Nodo)); n->x = v; n->sig = NULL;
+    if (!*l) *l = n;
+    else { Nodo *p = *l; while (p->sig) p = p->sig; p->sig = n; }
+}
+
+void pop_front(Nodo **l) {
+    if (*l) { Nodo *t = *l; *l = t->sig; free(t); }
+}
+
+void clear(Nodo **l) { while (*l) pop_front(l); }
+
+void print(Nodo *l) { while (l) { printf("%d ", l->x); l = l->sig; } }
+
+int main() {
+    Nodo *lista = NULL;
+    char cmd[10]; int val;
+
+    while (scanf("%s", cmd) == 1) {
+        if (!strcmp(cmd, "pf")) scanf("%d", &val), push_front(&lista, val);
+        else if (!strcmp(cmd, "pb")) scanf("%d", &val), push_back(&lista, val);
+        else if (!strcmp(cmd, "pop")) pop_front(&lista);
+        else if (!strcmp(cmd, "clear")) clear(&lista);
+        else if (!strcmp(cmd, "fin")) break;
+    }
+
+    print(lista); clear(&lista);
+    return 0;
+}
+
+
+Ejercicio 7: Punteros a función (callbacks) — 10 pts
+Enunciado:
+Implementa aplicar(int *a, size_t n, int (*op)(int)) y dos operaciones: doble, cuadrado. Demuestra su
+uso con un menú simple.
+Firmas/Interfaz sugerida:
+int doble(int x);
+int cuadrado(int x);
+void aplicar(int *a, size_t n, int (*op)(int));
+
+
+#include <stdio.h>
+
+int doble(int x)     { return 2 * x; }
+int cuadrado(int x)  { return x * x; }
+
+void aplicar(int *a, size_t n, int (*op)(int)) {
+    for (size_t i = 0; i < n; ++i)
+        a[i] = op(a[i]);
+}
+
+int main() {
+    int a[] = {1, 2, 3, 4, 5};
+    size_t n = sizeof(a) / sizeof(a[0]);
+    int opcion;
+
+    printf("1. Doble\n2. Cuadrado\nOpción: ");
+    scanf("%d", &opcion);
+
+    if (opcion == 1) aplicar(a, n, doble);
+    else if (opcion == 2) aplicar(a, n, cuadrado);
+
+    for (size_t i = 0; i < n; ++i)
+        printf("%d ", a[i]);
+    printf("\n");
+
+    return 0;
+}
+
+
+
+
+Ejercicio 8: Archivo + estructuras — estadísticas de ventas — 10 pts
+Enunciado:
+Lee un archivo CSV con líneas producto,unidades,precio. Carga a un arreglo dinámico de struct
+Venta y calcula total vendido, producto más vendido y ticket promedio.
+• Usa punteros, funciones y manejo básico de errores.
+Firmas/Interfaz sugerida:
+typedef struct { char prod[32]; int unidades; double precio; } Venta;
+Caso(s) de prueba sugeridos:
+10. CSV corto con 3–5 líneas; valida totales.
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct { char prod[32]; int unidades; double precio; } Venta;
+
+int main() {
+    FILE *f = fopen("ventas.csv", "r");
+    if (!f) return perror("Archivo"), 1;
+
+    Venta *v = NULL;
+    size_t n = 0;
+    char l[128];
+    while (fgets(l, sizeof l, f)) {
+        Venta temp;
+        if (sscanf(l, "%31[^,],%d,%lf", temp.prod, &temp.unidades, &temp.precio) == 3) {
+            v = realloc(v, ++n * sizeof(Venta));
+            if (!v) return perror("Memoria"), 1;
+            v[n - 1] = temp;
+        }
+    }
+    fclose(f);
+
+    double total = 0;
+    int maxu = -1, imax = -1;
+    for (size_t i = 0; i < n; ++i) {
+        total += v[i].unidades * v[i].precio;
+        if (v[i].unidades > maxu) maxu = v[i].unidades, imax = i;
+    }
+
+    printf("Total: %.2f\n", total);
+    if (imax >= 0) printf("Más vendido: %s (%d)\n", v[imax].prod, v[imax].unidades);
+    if (n) printf("Ticket promedio: %.2f\n", total / n);
+
+    free(v);
+    return 0;
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    void *data;
+    size_t size, cap, elem;
+} Vector;
+
+Vector *vec_new(size_t elem) {
+    Vector *v = malloc(sizeof(Vector));
+    v->size = 0; v->cap = 4; v->elem = elem;
+    v->data = malloc(v->cap * elem);
+    return v;
+}
+
+void vec_free(Vector *v) { free(v->data); free(v); }
+
+void vec_push(Vector *v, void *e) {
+    if (v->size == v->cap) {
+        v->cap *= 2;
+        v->data = realloc(v->data, v->cap * v->elem);
+    }
+    memcpy((char*)v->data + v->size++ * v->elem, e, v->elem);
+}
+
+void *vec_get(Vector *v, size_t i) {
+    return (i < v->size) ? (char*)v->data + i * v->elem : NULL;
+}
+
+void vec_set(Vector *v, size_t i, void *e) {
+    if (i < v->size)
+        memcpy((char*)v->data + i * v->elem, e, v->elem);
+}
